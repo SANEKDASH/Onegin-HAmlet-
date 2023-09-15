@@ -1,0 +1,101 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "color_print.h"
+#include "debug.h"
+
+void PrintTextInFile(char **text, FILE *output_file)
+{
+    CHECK(output_file);
+
+    for (int i  = 0; *(text + i) != 0; i++)
+    {
+        fprintf(output_file, "%d - %s\n", i, *(text + i));
+    }
+}
+
+long GetFileSize(FILE *ptr_file)
+{
+    CHECK(ptr_file);
+
+    fseek(ptr_file, 0, SEEK_END);
+    long buf_size = ftell(ptr_file);
+
+    fseek(ptr_file, 0, SEEK_SET);
+
+    return buf_size;
+}
+
+int SplitBufIntoLines(char *buf)
+{
+    CHECK(buf);
+
+    char *read_ptr = buf;
+    int lines_count = 0;
+
+    while (*read_ptr++ != '\0')
+    {
+        if (*read_ptr == '\n')
+        {
+            while (*read_ptr == '\n')
+            {
+                ++read_ptr;
+            }
+
+            *(--read_ptr) = '\0';
+
+            ++lines_count;
+
+            ++read_ptr;
+        }
+    }
+
+    return lines_count;
+}
+
+void FillText(char **text, const char *buf, size_t BufSize)
+{
+    CHECK(text);
+    CHECK(buf);
+
+    size_t i = 0;
+
+    char *cur_line = (char *) buf;
+
+    while (i < BufSize)
+    {
+        if (*(buf + i) == '\0')
+        {
+            *text++ = cur_line;
+
+            ++i;
+
+            cur_line = (char *)buf + i;
+        }
+        ++i;
+    }
+
+    *text++ = cur_line;
+    *text = 0;
+}
+
+void InsertSort(char **data,
+                size_t data_len)
+{
+    CHECK(data);
+    for (size_t i = 0; i < data_len; i++)
+    {
+        for (size_t n = i; n > 0; n--)
+        {
+            if (strcmp(*(data + n), *(data + n - 1)) < 0)
+            {
+                char *tmp = *(data + n);
+
+                *(data + n) = *(data + n - 1);
+
+                *(data + n - 1) = tmp;
+            }
+        }
+    }
+}

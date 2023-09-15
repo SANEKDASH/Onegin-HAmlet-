@@ -1,0 +1,67 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+#include "color_print.h"
+#include "debug.h"
+#include "onegin_funcs.h"
+
+int main()
+{
+    printf("%d", strlen("huy"));
+    FILE *input_file = fopen("hamlet.txt", "rb"); //fopen fail to read
+
+    const size_t kBufSize = GetFileSize(input_file);
+
+    char *buf = (char *) calloc(kBufSize + 1, sizeof(char));
+
+    /*if (!buf)
+    {
+        perror("buf fucked up");
+        fclose();
+        return 2;
+    } */
+
+    int error = fread(buf, sizeof(char), kBufSize, input_file);
+
+    fclose(input_file);
+
+
+    FILE *output_file =  fopen("sorted_hamlet.txt", "w");\
+
+    /*if ()
+    {
+        perror("output file fucked up");
+    }*/
+
+    const size_t kLinesCount = SplitBufIntoLines(buf);
+
+    char **text = (char **) calloc(kLinesCount, sizeof(char *));
+
+    FillText(text, buf, kBufSize);
+
+
+    fprintf(output_file, "\t\t\t\t\t[ALPHABET SORT]\n");
+
+    qsort(text, kLinesCount, sizeof(char *), MyStrcmp);
+    PrintTextInFile(text, output_file);
+
+
+    fprintf(output_file,"\n-------------------------------------------------------------------\n"
+                        "\t\t\t\t\t[REVERSE ALPHABET SORT]\n");
+
+    qsort(text, kLinesCount, sizeof(char *), MyReverseStrcmp);
+    PrintTextInFile(text, output_file);
+
+    fprintf(output_file,"\n-------------------------------------------------------------------\n"
+                        "\t\t\t\t\t[ORIGINAL]\n");
+                        
+    fwrite(buf, sizeof(char), kBufSize, );
+
+    fclose(output_file);
+    free(buf);
+    free(text);
+
+    return 0;
+}
