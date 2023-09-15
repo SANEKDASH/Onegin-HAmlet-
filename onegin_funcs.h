@@ -1,12 +1,18 @@
+#ifndef ONEGIN
+#define ONEGIN
+
+struct Text
+{
+    char** lines_ptr;
+    size_t lines_count;
+    char* buf;
+};
+
 void FillText(char **text, const char *buf, size_t BufSize);
 
 long GetFileSize(FILE *ptr_file);
 
 int SplitBufIntoLines(char *buf);
-
-void InsertSort(char **data,
-                size_t data_len,
-                int (*CompFunc)(const void* str_lhs, const void* str_rhs));
 
 void PrintTextInFile(char **text, FILE *output_file);
 
@@ -21,6 +27,7 @@ void VoidInsertSort(void *data,
                     size_t data_size,
                     int (*CompFunc)(const void* str_lhs, const void* str_rhs));
 
-size_t GetTextSize(const char** text);
+size_t GetLinesCount(const char*const* text);
 
-char **ReadTextFromFile(const char *file_name);
+void ReadTextFromFile(const char *file_name, Text* text);
+#endif

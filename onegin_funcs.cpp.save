@@ -77,7 +77,7 @@ void FillText(char **text, const char *buf, size_t BufSize)
 
             ++i;
 
-            cur_line = (char *)buf + i;
+            cur_line = (char *)(buf + i);
         }
         ++i;
     }
@@ -86,32 +86,12 @@ void FillText(char **text, const char *buf, size_t BufSize)
     *text = nullptr;
 }
 
-
-void InsertSort(char **data,
-                size_t data_len,
-                int (*CompFunc)(void* str_lhs, void* str_rhs))
-{
-    CHECK(data);
-    for (size_t i = 0; i < data_len; i++)
-    {
-        for (size_t n = i; n > 0; n--)
-        {
-            if (CompFunc(*(data + n), *(data + n - 1)) < 0)
-            {
-                VoidSwap(data + n, data + n - 1, sizeof(char *));
-            }
-        }
-    }
-
-//rabotaet
-}
-
-
 void VoidInsertSort(void *data,
                     size_t data_len,
                     size_t data_size,
                     int (*CompFunc)(const void* str_lhs, const void* str_rhs))
 {
+    CHECK(CompFunc);
     CHECK(data);
 
     for (size_t i = 0; i < data_len; i++)
@@ -129,7 +109,10 @@ void VoidInsertSort(void *data,
 
 static void VoidSwap(void *a, void *b, size_t data_size)
 {
-    for (size_t i = 0; i < data_size; i++)
+    CHECK(a);
+    CHECK(b);
+    // overlap checker
+    for (size_t i = 0; i < data_size; i++)   // optimize overlap?
     {
         char tmp = *((char*) b + i);
 
@@ -147,8 +130,6 @@ int MyStrcmp (const void *ptr_str_lhs, const void *ptr_str_rhs)
     const char *str_lhs = *(const char **) ptr_str_lhs;
     const char *str_rhs = *(const char **) ptr_str_rhs;
 
-    //printf("\nlhs - %s\nrhs - %n", str_lhs, str_rhs);
-
     while (*str_lhs != '\0' && *str_rhs != '\0')
     {
         if (!isalpha(*str_lhs))
@@ -165,7 +146,7 @@ int MyStrcmp (const void *ptr_str_lhs, const void *ptr_str_rhs)
             continue;
         }
 
-        if (isalpha(*str_lhs) && isalpha(*str_rhs) && toupper(*str_lhs) == toupper((*str_rhs)))
+        if (toupper(*str_lhs) == toupper((*str_rhs)))
         {
             ++str_lhs;
             ++str_rhs;
@@ -179,7 +160,6 @@ int MyStrcmp (const void *ptr_str_lhs, const void *ptr_str_rhs)
     }
 
     return toupper(*str_lhs) - toupper(*str_rhs);
-//ne rabotaet
 }
 
 int MyReverseStrcmp(const void *ptr_str_lhs, const void *ptr_str_rhs)
@@ -219,7 +199,7 @@ static int SubStrCmp(const void *ptr_str_lhs, size_t lhs_len, const void *ptr_st
             continue;
         }
 
-        if (isalpha(*str_lhs) && isalpha(*str_rhs) && toupper(*str_lhs) == toupper((*str_rhs)))
+        if (toupper(*str_lhs) == toupper(*str_rhs))
         {
             --str_lhs;
             --str_rhs;
@@ -237,8 +217,9 @@ static int SubStrCmp(const void *ptr_str_lhs, size_t lhs_len, const void *ptr_st
     return toupper(*str_lhs) - toupper(*str_rhs);
 }
 
-size_t GetTextSize(const char** text)
+size_t GetLinesCount(const char *const *text)
 {
+    CHECK(test);
     size_t text_size = 0;
 
     while (*(text + text_size) != nullptr)
@@ -252,29 +233,47 @@ size_t GetTextSize(const char** text)
 
 int CompPointers(const void *ptr_lhs_ptr, const void *ptr_rhs_ptr)
 {
+    CHECK(ptr_lhs_ptr);
+    CHECK(ptr_lhs_ptr);
     const char *lhs_ptr = *(char **)ptr_lhs_ptr;
     const char *rhs_ptr = *(char **)ptr_rhs_ptr;
 
     return lhs_ptr - rhs_ptr;
 }
 
-char **ReadTextFromFile(const char *file_name)
+void ReadTextFromFile(const char *file_name, Text* text)
 {
-
+    CHECK(file_name);
 
     FILE *input_file = fopen(file_name, "rb");
-    
-    const size_t kBufSize = GetFileSize(input_file);
-    
-    char *buf = (char *) calloc(kBufSize + 1, sizeof(char));
-    fread(buf, sizeof(char), kBufSize, input_file);
-    fclose(input_file);
-    
-    const size_t kLinesCount = SplitBufIntoLines(buf);
-    char **text = (char **) calloc(kLinesCount, sizeof(char *));
-    FillText(text, buf, kBufSize);
-    
-    return text;
+    CHECK(input_file);
 
+    static const size_t kBufSize = GetFileSize(input_file);
+
+    text->buf = (char *) calloc(kBufSize + 1, sizeof(char));
+    CHECK(text->buf);
+
+    fread(text->buf, sizeof(char), kBufSize, input_file);
+
+    fclose(input_file);
+
+    text->lines_count = SplitBufIntoLines(text->buf);
+    text->lines_ptr = (char **) calloc(text->lines_count + 1, sizeof(char *));
+    CHECK(text->lines_ptr);
+
+    FillText(text->lines_ptr, text->buf, kBufSize);
 }
 
+// #defines!!!
+// calloc --> ssanya_debug_calloc(.... + line + file ...)
+// free --> ...
+// log_file .html <pre>
+// calloc(address, size) at file.cpp:12
+// calloc at ....
+// ...
+// free(address, size???)
+// free()
+// valgrind/address sanitizer
+//
+// fprintf fopen disable bufferization
+// fflush
