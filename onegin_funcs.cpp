@@ -7,9 +7,12 @@
 #include "debug.h"
 #include "onegin_funcs.h"
 
-static void VoidSwap (void *a, void *b, size_t data_size);
+static void OptVoidSwap(void *a, void *b, size_t data_size);
 
-static int SubStrCmp(const void *ptr_str_lhs, size_t lhs_len, const void *ptr_str_rhs, size_t rhs_len);
+static int SubStrCmp(const void *ptr_str_lhs,
+                     size_t lhs_len,
+                     const void *ptr_str_rhs,
+                     size_t rhs_len);
 
 void PrintTextInFile(char **text, FILE *output_file)
 {
@@ -21,12 +24,14 @@ void PrintTextInFile(char **text, FILE *output_file)
     }
 }
 
-long GetFileSize(FILE *ptr_file)
+long long GetFileSize(FILE *ptr_file)
 {
     CHECK(ptr_file);
 
-    fseek(ptr_file, 0, SEEK_END);
-    long buf_size = ftell(ptr_file);
+    long long start_pos = ftell(ptr_file);
+
+    fseek(ptr_file, start_pos, SEEK_END);
+    long long buf_size = ftell(ptr_file);
 
     fseek(ptr_file, 0, SEEK_SET);
 
@@ -100,26 +105,41 @@ void VoidInsertSort(void *data,
         {
             if (CompFunc((data + n * data_size), (data + (n  - 1) * data_size)) < 0)
             {
-                VoidSwap((data + n * data_size), (data + (n - 1) * data_size), data_size);
+                OptVoidSwap((data + n * data_size), (data + (n - 1) * data_size), data_size);
             }
         }
     }
 //rabotaet
 }
 
-static void VoidSwap(void *a, void *b, size_t data_size)
+static void OptVoidSwap(void *a, void *b, size_t data_size)
 {
     CHECK(a);
     CHECK(b);
-    // overlap checker
+    CHECK(abs((char *)a - (char *)b) >= data_size);
 
-    for (size_t i = 0; i < data_size; i++)   // optimize overlap?
+    size_t delta = 0;
+
+    for (size_t i = 0; i * sizeof(int) < data_size; ++i)
     {
-        char tmp = *((char*) b + i);
+        int tmp = *(int *)(a + i * sizeof(int));
 
-        *((char*) b + i) = *((char*) a + i);
+        *(int *)(a + i * sizeof(int)) = *(int *)(b + i * sizeof(int));
 
-        *((char*) a + i) = tmp;
+        *(int *)(b + i * sizeof(int)) = tmp;
+
+        delta += sizeof(int);
+    }
+
+    for (size_t i = 0; i * sizeof(char) < data_size - delta; ++i)
+    {
+        char tmp = *(char*)(b + delta);
+
+        *(char*)(b + delta) = *(char*)(a + delta);
+
+        *(char*)(a + delta) = tmp;
+
+        delta += sizeof(char);
     }
 }
 
@@ -174,7 +194,10 @@ int MyReverseStrcmp(const void *ptr_str_lhs, const void *ptr_str_rhs)
     return SubStrCmp(ptr_str_lhs, strlen(lhs_str), ptr_str_rhs, strlen(rhs_str));
 }
 
-static int SubStrCmp(const void *ptr_str_lhs, size_t lhs_len, const void *ptr_str_rhs, size_t rhs_len)
+static int SubStrCmp(const void *ptr_str_lhs,
+                     size_t lhs_len,
+                     const void *ptr_str_rhs,
+                     size_t rhs_len)
 {
     CHECK(ptr_str_rhs);
     CHECK(ptr_str_lhs);
@@ -254,7 +277,8 @@ void ReadTextFromFile(const char *file_name, Text* text)
     text->buf = (char *) calloc(kBufSize + 1, sizeof(char));
     CHECK(text->buf);
 
-    fread(text->buf, sizeof(char), kBufSize, input_file);
+    long long readen_number = fread(text->buf, sizeof(char), kBufSize, input_file);
+    CHECK(readen_number);
 
     fclose(input_file);
 

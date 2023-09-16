@@ -10,7 +10,7 @@ struct Text
 
 void FillText(char **text, const char *buf, size_t BufSize);
 
-long GetFileSize(FILE *ptr_file);
+long long GetFileSize(FILE *ptr_file);
 
 int SplitBufIntoLines(char *buf);
 
