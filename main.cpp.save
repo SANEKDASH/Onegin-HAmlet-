@@ -11,35 +11,32 @@ int main()
 {
     Text text = {};
     ReadTextFromFile("hamlet.txt", &text);
-    // fail??
 
     const size_t kLinesCount = GetLinesCount(text.lines_ptr);
 
     FILE *output_file =  fopen("sorted_hamlet.txt", "w");
     CHECK(output_file);
-    // error!
 
     fprintf(output_file, "\t\t\t\t\t[ALPHABET SORT]\n");
 
-    qsort(text.lines_ptr, kLinesCount, sizeof(char *), MyStrcmp);
+    //VoidInsertSort(text.lines_ptr, text.lines_count, sizeof(Lines), MyStrcmp);
+    insertionSort(Lin data, int n)
     PrintTextInFile(text.lines_ptr, output_file);
-
 
     fprintf(output_file,"\n-------------------------------------------------------------------\n"
                         "\t\t\t\t\t[REVERSE ALPHABET SORT]\n");
-
-    VoidInsertSort(text.lines_ptr, kLinesCount, sizeof(char *), MyReverseStrcmp);
+    VoidInsertSort(text.lines_ptr, text.lines_count, sizeof(Lines), MyReverseStrcmp);
     PrintTextInFile(text.lines_ptr, output_file);
 
     fprintf(output_file,"\n-------------------------------------------------------------------\n"
                         "\t\t\t\t\t[SOURCE]\n");
 
-    qsort(text.lines_ptr, kLinesCount, sizeof(char *), CompPointers);
+    VoidInsertSort(text.lines_ptr, text.lines_count, sizeof(Lines), CompPointers);
     PrintTextInFile(text.lines_ptr, output_file);
 
     fclose(output_file);
     free(text.lines_ptr);
-    free((void *)text.buf);
+    free(text.buf);
 
     return 0;
 }

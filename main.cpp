@@ -18,23 +18,25 @@ int main()
     CHECK(output_file);
 
     fprintf(output_file, "\t\t\t\t\t[ALPHABET SORT]\n");
-    qsort(text.lines_ptr, text.lines_count, sizeof(char *), MyStrcmp);
+
+    //VoidInsertSort(text.lines_ptr, text.lines_count, sizeof(Lines), MyStrcmp);
+    BinInsSort(text.lines_ptr, text.lines_count, MyStrcmp);
     PrintTextInFile(text.lines_ptr, output_file);
 
     fprintf(output_file,"\n-------------------------------------------------------------------\n"
                         "\t\t\t\t\t[REVERSE ALPHABET SORT]\n");
-    qsort(text.lines_ptr, text.lines_count, sizeof(char *), MyReverseStrcmp);
+    VoidInsertSort(text.lines_ptr, text.lines_count, sizeof(Lines), MyReverseStrcmp);
     PrintTextInFile(text.lines_ptr, output_file);
 
     fprintf(output_file,"\n-------------------------------------------------------------------\n"
                         "\t\t\t\t\t[SOURCE]\n");
 
-    VoidInsertSort(text.lines_ptr, text.lines_count, sizeof(char *), CompPointers);
+    VoidInsertSort(text.lines_ptr, text.lines_count, sizeof(Lines), CompPointers);
     PrintTextInFile(text.lines_ptr, output_file);
 
     fclose(output_file);
     free(text.lines_ptr);
-    free((void *)text.buf);
+    free(text.buf);
 
     return 0;
 }

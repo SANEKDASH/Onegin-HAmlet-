@@ -8,19 +8,19 @@
 #include "onegin_funcs.h"
 
 static void OptVoidSwap(void *a, void *b, size_t data_size);
-
-static int SubStrCmp(const void *ptr_str_lhs,
+static int binarySearch(Lines *data, Lines *item_pos, int low, int high, int (*CompFunc)(const void* str_lhs, const void* str_rhs));
+static int SubStrCmp(const char *ptr_str_lhs,
                      size_t lhs_len,
-                     const void *ptr_str_rhs,
+                     const char *ptr_str_rhs,
                      size_t rhs_len);
 
-void PrintTextInFile(char **text, FILE *output_file)
+void PrintTextInFile(Lines *text, FILE *output_file)
 {
     CHECK(output_file);
 
-    for (int i  = 0; *(text + i) != 0; i++)
+    for (int i  = 0; (text + i)->line != nullptr; i++)
     {
-        fprintf(output_file, "%s\n", *(text + i));
+        fprintf(output_file, "%s\n", (text + i)->line);
     }
 }
 
@@ -65,7 +65,7 @@ int SplitBufIntoLines(char *buf)
     return lines_count;
 }
 
-void FillText(char **text, const char *buf, size_t BufSize)
+void FillText(Lines *text, const char *buf, size_t BufSize)
 {
     CHECK(text);
     CHECK(buf);
@@ -78,8 +78,8 @@ void FillText(char **text, const char *buf, size_t BufSize)
     {
         if (*(buf + i) == '\0')
         {
-            *text++ = cur_line;
-
+            text->line = cur_line;
+            (text++)->line_len = strlen(cur_line);
             ++i;
 
             cur_line = (char *)(buf + i);
@@ -87,8 +87,11 @@ void FillText(char **text, const char *buf, size_t BufSize)
         ++i;
     }
 
-    *text++ = cur_line;
-    *text = nullptr;
+    text->line = cur_line;
+    (text++)->line_len = strlen(cur_line);
+
+    text->line = nullptr;
+    text->line_len = 0;
 }
 
 void VoidInsertSort(void *data,
@@ -111,6 +114,9 @@ void VoidInsertSort(void *data,
     }
 //rabotaet
 }
+
+static void MemCpy(void *a, void *b, size_t data_size)
+
 
 static void OptVoidSwap(void *a, void *b, size_t data_size)
 {
@@ -143,44 +149,45 @@ static void OptVoidSwap(void *a, void *b, size_t data_size)
     }
 }
 
+
 int MyStrcmp (const void *ptr_str_lhs, const void *ptr_str_rhs)
 {
     CHECK(ptr_str_rhs);
     CHECK(ptr_str_lhs);
+    Lines str_lhs = *((Lines *) ptr_str_lhs);
 
-    const char *str_lhs = *(const char **) ptr_str_lhs;
-    const char *str_rhs = *(const char **) ptr_str_rhs;
+    Lines str_rhs = *((Lines *) ptr_str_rhs);
 
-    while (*str_lhs != '\0' && *str_rhs != '\0')
+    while (*(str_lhs.line) != '\0' && *(str_rhs.line) != '\0')
     {
-        if (!isalpha(*str_lhs))
+        if (!isalpha(*str_lhs.line))
         {
-            str_lhs++;
+            str_lhs.line++;
 
             continue;
         }
 
-        if (!isalpha(*str_rhs))
+        if (!isalpha(*str_rhs.line))
         {
-            str_rhs++;
+            str_rhs.line++;
 
             continue;
         }
 
-        if (toupper(*str_lhs) == toupper((*str_rhs)))
+        if (isalpha(*str_lhs.line) && isalpha(*str_rhs.line) &&
+            toupper(*str_lhs.line) == toupper(*str_rhs.line))
         {
-            ++str_lhs;
-            ++str_rhs;
+            ++str_lhs.line;
+            ++str_rhs.line;
 
             continue;
         }
         else
         {
-            return toupper(*str_lhs) - toupper(*str_rhs);
+            return toupper(*str_lhs.line) - toupper(*str_rhs.line);
         }
     }
-
-    return toupper(*str_lhs) - toupper(*str_rhs);
+    return toupper(*str_lhs.line) - toupper(*str_rhs.line);
 }
 
 int MyReverseStrcmp(const void *ptr_str_lhs, const void *ptr_str_rhs)
@@ -188,22 +195,25 @@ int MyReverseStrcmp(const void *ptr_str_lhs, const void *ptr_str_rhs)
     CHECK(ptr_str_lhs);
     CHECK(ptr_str_rhs);
 
-    const char *lhs_str = *(const char **)ptr_str_lhs;
-    const char *rhs_str = *(const char **)ptr_str_rhs;
+    const char *lhs_str = ((const Lines *)ptr_str_lhs)->line + ((const Lines *)ptr_str_lhs)->line_len - 1;
+    const char *rhs_str = ((const Lines *)ptr_str_rhs)->line + ((const Lines *)ptr_str_rhs)->line_len - 1;
 
-    return SubStrCmp(ptr_str_lhs, strlen(lhs_str), ptr_str_rhs, strlen(rhs_str));
+    return SubStrCmp(((const Lines *)ptr_str_lhs)->line,
+                     ((const Lines *)ptr_str_lhs)->line_len,
+                     ((const Lines *)ptr_str_rhs)->line,
+                     ((const Lines *)ptr_str_rhs)->line_len);
 }
 
-static int SubStrCmp(const void *ptr_str_lhs,
+static int SubStrCmp(const char *ptr_str_lhs,
                      size_t lhs_len,
-                     const void *ptr_str_rhs,
+                     const char *ptr_str_rhs,
                      size_t rhs_len)
 {
     CHECK(ptr_str_rhs);
     CHECK(ptr_str_lhs);
 
-    const char *str_lhs = *(const char **)ptr_str_lhs + lhs_len - 1;
-    const char *str_rhs = *(const char **)ptr_str_rhs + rhs_len - 1;
+    const char *str_lhs = ptr_str_lhs + lhs_len - 1;
+    const char *str_rhs = ptr_str_rhs + rhs_len - 1;
 
     while (lhs_len > 0  && rhs_len > 0)
     {
@@ -241,12 +251,12 @@ static int SubStrCmp(const void *ptr_str_lhs,
     return toupper(*str_lhs) - toupper(*str_rhs);
 }
 
-size_t GetLinesCount(const char *const *text)
+size_t GetLinesCount(const Lines *text)
 {
     CHECK(text);
     size_t text_size = 0;
 
-    while (*(text + text_size) != nullptr)
+    while ((text + text_size)->line != nullptr)
     {
         ++text_size;
     }
@@ -265,31 +275,98 @@ int CompPointers(const void *ptr_lhs_ptr, const void *ptr_rhs_ptr)
     return lhs_ptr - rhs_ptr;
 }
 
-void ReadTextFromFile(const char *file_name, Text* text)
+int ReadTextFromFile(const char *file_name, Text* text)
 {
     CHECK(file_name);
 
     FILE *input_file = fopen(file_name, "rb");
-    CHECK(input_file);
+    if (input_file == nullptr)
+    {
+        ColorPrintf(kRed, "\nGot a problem with opening file\n");
+        return -1;
+    }
 
     static const size_t kBufSize = GetFileSize(input_file);
 
     text->buf = (char *) calloc(kBufSize + 1, sizeof(char));
-    CHECK(text->buf);
+
+    if (text->buf == nullptr)
+    {
+        ColorPrintf(kRed, "\nGot a problem with allocating data\n");
+        return -2;
+    }
 
     long long readen_number = fread(text->buf, sizeof(char), kBufSize, input_file);
-    CHECK(readen_nember);
+    CHECK(readen_number);
+
     fclose(input_file);
 
     text->lines_count = SplitBufIntoLines(text->buf);
-    text->lines_ptr = (char **) calloc(text->lines_count + 1, sizeof(char *));
-    CHECK(text->lines_ptr);
+    text->lines_ptr = (Lines *) calloc(text->lines_count + 1, sizeof(Lines));
+
+    if (text->lines_ptr == nullptr)
+    {
+        ColorPrintf(kRed, "\nGot a problem with allocating data\n");
+        return -2;
+    }
 
     FillText(text->lines_ptr, text->buf, kBufSize);
+    return 0;
 }
 
-void MyQsort()
+void insertionSort(void* data,
+                   size_t data_len, 
+                   size_t data_size, 
+                   int (*CompFunc)(const void* str_lhs, const void* str_rhs))
+{
+    CHECK(data);
+    int i = 0, loc = 0, j = 0;
+    char* selected = nullptr;
 
+    for (i = 1; i < data_len; ++i)
+    {
+        j = i - 1;
+        selected = (char *) data + i * data_size;
+
+
+        loc = binarySearch(data, selected, 0, j, CompFunc);
+
+
+        while (j >= loc)
+        {
+            data[j + 1] = data[j];
+            j--;
+        }
+        data[j + 1] = selected;
+    }
+}
+
+static int binarySearch(void *data, 
+                        void *item_pos, 
+                        size_t data_size, 
+                        size_t low,
+                        size_t high,
+                        int (*CompFunc)(const void* str_lhs, const void* str_rhs))
+{
+    if (high <= low)
+    {
+        return (CompFunc(item_pos, (data + low * data_size)) > 0 ) ? (low + 1) : low;
+    }
+
+    int mid = (low + high) / 2;
+
+    if (CompFunc(item_pos, (data + mid * data_size)) == 0)
+    {
+        return mid + 1;
+    }
+
+    if (CompFunc(item_pos, (data + mid * data_size)) > 0)
+    {
+        return binarySearch(data, item_pos, mid + 1, high, CompFunc);
+    }
+
+    return binarySearch(data, item_pos, low, mid - 1, CompFunc);
+}
 // #defines!!!
 // calloc --> ssanya_debug_calloc(.... + line + file ...)
 // free --> ...

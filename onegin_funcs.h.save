@@ -1,23 +1,34 @@
-// header guard
+#ifndef ONEGIN
+#define ONEGIN
 
-struct Text
-{          
-    char** lines_ptr;
-    size_t lines_count;
-    const char* buf;    
+struct Lines
+{
+    char *line;
+    size_t line_len;
 };
 
-\void FillText(char **text, const char *buf, size_t BufSize);
+struct Text
+{
+    Lines* lines_ptr;
+    size_t lines_count;
+    char* buf;
+};
 
-long GetFileSize(FILE *ptr_file);
+/*!
+ * Fills array of char * with the strings from buf.
+ */
+
+void FillText(Lines *text, const char *buf, size_t BufSize);
+
+/*!
+ * Returns file size.
+ */
+
+long long GetFileSize(FILE *ptr_file);
 
 int SplitBufIntoLines(char *buf);
 
-void InsertSort(char **data,
-                size_t data_len,
-                int (*CompFunc)(const void* str_lhs, const void* str_rhs));
-
-void PrintTextInFile(char **text, FILE *output_file);
+void PrintTextInFile(Lines *text, FILE *output_file);
 
 int MyStrcmp(const void *ptr_str_lhs, const void *ptr_str_rhs);
 
@@ -30,6 +41,13 @@ void VoidInsertSort(void *data,
                     size_t data_size,
                     int (*CompFunc)(const void* str_lhs, const void* str_rhs));
 
-size_t GetLinesCount(const char*const* text);
+size_t GetLinesCount(const Lines* text);
 
-void ReadTextFromFile(const char *file_name);
+int ReadTextFromFile(const char *file_name, Text* text);
+
+void MyQsort(void *data,
+             size_t left,
+             size_t right,
+             size_t data_size,
+             int (*CompFunc)(const void* str_lhs, const void* str_rhs));
+#endif
